@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Chat {
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String?
+  type         ChatType   @default(PRIVATE)
+  avatar       String?
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime   @updatedAt @db.Timestamptz(6)
+  messages     Message[]
+  participants UserChat[]
+
+  @@index([type])
+  @@index([isActive])
+  @@map("chats")
+}
+
+model Message {
+  id        String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  chatId    String        @db.Uuid
+  userId    String        @db.Uuid
+  content   String
+  type      MessageType   @default(TEXT)
+  isEdited  Boolean       @default(false)
+  replyToId String?       @db.Uuid
+  createdAt DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime      @updatedAt @db.Timestamptz(6)
+  reads     MessageRead[]
+  chat      Chat          @relation(fields: [chatId], references: [id], onDelete: Cascade, map: "fk_chat_msg")
+  sender    Users         @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_user_msg")
+  replyTo   Message?      @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies   Message[]     @relation("MessageReplies")
+
+  @@index([chatId, createdAt])
+  @@index([userId])
+  @@map("messages")
+}
+
+model MessageRead {
+  id        String   @id @default(cuid())
+  messageId String   @db.Uuid
+  userId    String   @db.Uuid
+  readAt    DateTime @default(now()) @db.Timestamptz(6)
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user      Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@index([userId, readAt])
+  @@map("message_reads")
+}
+
+model UserChat {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String    @db.Uuid
+  chatId     String    @db.Uuid
+  role       ChatRole  @default(MEMBER)
+  joinedAt   DateTime  @default(now()) @db.Timestamptz(6)
+  lastReadAt DateTime? @db.Timestamptz(6)
+  chat       Chat      @relation(fields: [chatId], references: [id], onDelete: Cascade, map: "fk_chat_user")
+  user       Users     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_user_chat")
+
+  @@unique([userId, chatId])
+  @@index([chatId])
+  @@index([userId])
+  @@map("user_chats")
+}
+
+model Users {
+  id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  username     String        @unique
+  name         String?
+  email        String        @unique
+  avatar       String?
+  passwordHash String?
+  status       UserStatus    @default(OFFLINE)
+  lastSeen     DateTime?     @db.Timestamptz(6)
+  createdAt    DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime      @updatedAt @db.Timestamptz(6)
+  messageReads MessageRead[]
+  sentMessages Message[]
+  userChats    UserChat[]
+
+  @@index([status])
+  @@index([lastSeen])
+  @@map("users")
+}
+
+enum ChatType {
+  PRIVATE
+  GROUP
+}
+
+enum UserStatus {
+  ONLINE
+  OFFLINE
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  VOICE
+  VIDEO
+}
+
+enum ChatRole {
+  ADMIN
+  MODERATOR
+  MEMBER
+}
