@@ -13,7 +13,7 @@ export class SocketService {
     private readonly MessagesService: MessagesService
   ) {}
 
-  async sendMessage(userId: string, dto: CreateMessageDto, io: Server) {
+  async sendMessage(userId: string, dto: CreateMessageDto) {
     const { chatId, content, type } = dto;
     const createdMessage = await this.MessagesService.createMessage(
       userId,

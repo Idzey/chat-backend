@@ -1,5 +1,9 @@
 import { MessagesService } from "./messages/messages.service";
-import { BadRequestException, Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { PrismaService } from "../libs/prisma/prisma.service";
 import {
   AddUserToChatDto,
@@ -12,7 +16,7 @@ import { isUUID } from "validator";
 export class ChatsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly messagesService: MessagesService,
+    private readonly messagesService: MessagesService
   ) {}
 
   private checkChatUUID(chatId: string) {
@@ -24,7 +28,7 @@ export class ChatsService {
   async getUserChats(userId: string) {
     const chats = await this.prisma.chat.findMany({
       where: {
-          participants: { some: { userId } }
+        participants: { some: { userId } },
       },
       select: {
         id: true,
@@ -34,28 +38,47 @@ export class ChatsService {
       },
     });
 
-
     const newChats = await Promise.all(
       chats.map(async (chat) => ({
         ...chat,
         lastMessage: await this.messagesService.getLastMessage(chat.id),
         unreadCount: 2,
-        name: chat.name || (
-          chat.type === 'PRIVATE' ? (
+        name: await this.getChatName(chat.id, userId),
+      }))
+    );
+
+    return newChats;
+  }
+
+  private async getChatName(chatId: string, userId: string) {
+    const chat = await this.prisma.chat.findUnique({
+      where: { id: chatId },
+      include: {
+        participants: {
+          where: { userId: { not: userId } },
+          include: { user: true },
+        },
+      },
+    });
+
+    if (!chat) {
+      throw new NotFoundException("Chat not found");
+    }
+
+    return (
+      chat.name ||
+      (chat.type === "PRIVATE"
+        ? (
             await this.prisma.userChat.findFirst({
               where: {
                 chatId: chat.id,
-                userId: { not: userId }
+                userId: { not: userId },
               },
-              include: { user: true }
+              include: { user: true },
             })
-          )?.user.name : 'Group Chat'
-        ),
-      }))
+          )?.user.name
+        : "Group Chat")
     );
-    console.log(newChats);
-
-    return newChats;
   }
 
   async addUserToChat(chatId: string, dto: AddUserToChatDto) {
@@ -121,7 +144,7 @@ export class ChatsService {
         },
       },
     });
-
+ 
     return chat;
   }
 
@@ -145,17 +168,17 @@ export class ChatsService {
         },
         messages: {
           orderBy: {
-            createdAt: "desc",
+            createdAt: "asc",
           },
         },
       },
     });
 
     if (!chat) {
-      throw new Error("Chat not found");
+      throw new NotFoundException("Chat not found");
     }
 
-    return chat;
+    return { ...chat, name: await this.getChatName(chat.id, userId) };
   }
 
   async deleteChat(chatId: string, userId: string) {

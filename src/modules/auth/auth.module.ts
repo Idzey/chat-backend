@@ -10,6 +10,7 @@ import jwtConfig from 'src/config/jwt.config';
 import { TokenService } from './services/token.service';
 import { PasswordService } from './services/password.service';
 import { UsersModule } from '../users/users.module';
+import { CookieService } from './services/cookie.service';
 
 @Global()
 @Module({
@@ -21,6 +22,7 @@ import { UsersModule } from '../users/users.module';
     JwtStrategy,
     TokenService,
     PasswordService,
+    CookieService
   ],
   exports: [AuthService, PasswordService],
 })

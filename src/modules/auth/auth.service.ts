@@ -93,7 +93,7 @@ export class AuthService {
     };
 
     const { accessToken, refreshToken } = this.auth(payload);
-
+    
     return {
       accessToken,
       refreshToken,
@@ -137,8 +137,8 @@ export class AuthService {
     const { accessToken, refreshToken: newRefreshToken } = this.auth(payload);
 
     return {
-      access_token: accessToken,
-      refresh_token: newRefreshToken,
+      accessToken,
+      refreshToken: newRefreshToken,
     };
   }
 }

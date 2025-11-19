@@ -7,7 +7,7 @@ import {
 import { Server } from "socket.io";
 import { CreateMessageDto } from "./dto/create-message.dto";
 import { AuthenticatedSocket } from "interfaces/socket";
-import { Body, UseGuards } from "@nestjs/common";
+import { UseGuards } from "@nestjs/common";
 import { SocketService } from "./socket.service";
 import { WsJwtGuard } from "src/common/guards/jwt-socket.guard";
 
@@ -37,16 +37,17 @@ export class SocketGateway {
   @UseGuards(WsJwtGuard)
   @SubscribeMessage("join_chat")
   joinChat(
-    @Body() data: { chatId: string },
+    @MessageBody() data: { chatId: string },
     @ConnectedSocket() client: AuthenticatedSocket
   ) {
+    console.log('Joining chat:', data.chatId);
     this.socketService.joinChat(data.chatId, client);
   }
 
   @UseGuards(WsJwtGuard)
   @SubscribeMessage("leave_chat")
   leaveChat(
-    @Body() data: { chatId: string },
+    @MessageBody() data: { chatId: string },
     @ConnectedSocket() client: AuthenticatedSocket
   ) {
     this.socketService.leaveChat(data.chatId, client);
@@ -60,9 +61,9 @@ export class SocketGateway {
   ) {
     const message = await this.socketService.sendMessage(
       client.data.user.id,
-      data,
-      this.io
+      data
     );
+
     this.io.to(`chat:${data.chatId}`).emit("message:new", message);
 
     return message;

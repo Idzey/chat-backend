@@ -31,16 +31,18 @@ model Message {
   type      MessageType   @default(TEXT)
   isEdited  Boolean       @default(false)
   replyToId String?       @db.Uuid
+  fileId    String?       @db.Uuid
+  duration  Int?          
   createdAt DateTime      @default(now()) @db.Timestamptz(6)
   updatedAt DateTime      @updatedAt @db.Timestamptz(6)
   reads     MessageRead[]
   chat      Chat          @relation(fields: [chatId], references: [id], onDelete: Cascade, map: "fk_chat_msg")
   sender    Users         @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_user_msg")
-  replyTo   Message?      @relation("MessageReplies", fields: [replyToId], references: [id])
-  replies   Message[]     @relation("MessageReplies")
+  file      File?         @relation(fields: [fileId], references: [id], onDelete: SetNull)
 
   @@index([chatId, createdAt])
   @@index([userId])
+  @@index([fileId])
   @@map("messages")
 }
 
@@ -87,10 +89,39 @@ model Users {
   messageReads MessageRead[]
   sentMessages Message[]
   userChats    UserChat[]
+  uploadedFiles File[]
 
   @@index([status])
   @@index([lastSeen])
   @@map("users")
+}
+
+
+model File {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  filename  String
+  originalName String
+  mimeType  String
+  size      Int
+  path      String
+  url       String?
+  uploadedBy String   @db.Uuid
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @db.Timestamptz(6)
+  uploader  Users     @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
+  type      FileType  @default(FILE)
+  messages  Message[] 
+
+  @@index([uploadedBy])
+  @@index([mimeType])
+  @@index([type])
+  @@map("files")
+}
+
+enum FileType {
+  IMAGE
+  AUDIO
+  FILE
 }
 
 enum ChatType {

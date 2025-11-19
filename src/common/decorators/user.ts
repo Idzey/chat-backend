@@ -1,9 +1,15 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { Request } from 'express';
+import { Users } from '@prisma/client';
+import { FastifyRequest } from 'fastify';
 
 export const User = createParamDecorator(
-  (data: unknown, ctx: ExecutionContext) => {
-    const request: Request = ctx.switchToHttp().getRequest();
-    return request.user;
+  (data: unknown, ctx: ExecutionContext): Users => {
+    const request: FastifyRequest = ctx.switchToHttp().getRequest<FastifyRequest>();
+    
+    if (!request.user) {
+      throw new Error('User not found in request. Make sure authentication middleware is applied.');
+    }
+
+    return request.user as Users;
   },
 );
