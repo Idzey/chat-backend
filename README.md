@@ -1,98 +1,184 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Chat Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Backend-сервис для чата на базе [NestJS](https://nestjs.com/) с адаптером [Fastify](https://www.fastify.io/).  
+Поддерживает аутентификацию через Passport, работу с базой данных через Prisma, realtime-коммуникацию через Socket.IO и загрузку/хранение файлов в S3-совместимом хранилище (MinIO / AWS S3).
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Стек технологий
 
-## Description
+- **Node.js / TypeScript**
+- **NestJS** (с адаптером **Fastify**)
+- **Passport** — аутентификация и авторизация
+- **Prisma** — ORM / работа с базой данных
+- **Socket.IO** — realtime-чаты, события
+- **MinIO / AWS S3** — хранение файлов (медиа, вложения)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+---
 
-## Project setup
+## Возможности
+
+- Регистрация и авторизация пользователей
+- JWT / session-based аутентификация (уточни, если по-другому)
+- Создание и управление чатами / диалогами
+- Отправка и получение сообщений в реальном времени через Socket.IO
+- Хранение истории сообщений в базе через Prisma
+- Загрузка и хранение файлов (изображения, документы и т.п.) в MinIO (S3-совместимое хранилище)
+- Разделение окружений (development / production) через переменные среды
+
+> При желании опиши тут бизнес-особенности: личные/групповые чаты, статус «онлайн», редактирование/удаление сообщений и т.д.
+
+---
+
+## Запуск проекта
+
+### Предварительные требования
+
+- Node.js (актуальная LTS-версия, например 20.x)
+- npm или yarn / pnpm
+- Docker + Docker Compose (если используешь для БД и MinIO)
+- Настроенные переменные окружения (см. ниже)
+
+### Установка
 
 ```bash
-$ npm install
+# Клонируем репозиторий
+git clone https://github.com/Idzey/chat-backend.git
+cd chat-backend
+
+# Устанавливаем зависимости
+npm install
+# или
+yarn install
+# или
+pnpm install
 ```
 
-## Compile and run the project
+### Конфигурация окружения
+
+Создай файл `.env` в корне проекта (или используй `.env.example`, если он есть):
+
+```env
+# Пример — адаптируй под свою конфигурацию
+
+# HTTP-сервер
+PORT=3000
+
+# База данных (Prisma)
+DATABASE_URL="postgresql://user:password@localhost:5432/chat?schema=public"
+
+# JWT / Passport
+JWT_SECRET="super-secret"
+JWT_EXPIRES_IN="7d"
+
+# S3 / MinIO
+S3_ENDPOINT="http://localhost:9000"
+S3_ACCESS_KEY="minio-access-key"
+S3_SECRET_KEY="minio-secret-key"
+S3_BUCKET_NAME="chat-files"
+S3_USE_SSL=false
+
+# Прочие настройки (логирование, CORS и т.д.)
+NODE_ENV="development"
+```
+
+Если используешь Docker Compose для БД и MinIO, добавь сюда ссылку на `docker-compose.yml` и пример запуска:
+
+```bash
+docker compose up -d
+```
+
+---
+
+### Миграции Prisma
+
+После настройки `DATABASE_URL`:
+
+```bash
+# Генерация Prisma Client
+npx prisma generate
+
+# Применение миграций
+npx prisma migrate deploy
+# или для разработки
+npx prisma migrate dev
+```
+
+---
+
+### Запуск сервера
 
 ```bash
 # development
-$ npm run start
+npm run start:dev
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+# production build
+npm run build
+npm run start:prod
 ```
 
-## Run tests
+По умолчанию приложение поднимается на `http://localhost:3000` (или на том порту, который указан в `PORT`).
 
-```bash
-# unit tests
-$ npm run test
+---
 
-# e2e tests
-$ npm run test:e2e
+## Архитектура
 
-# test coverage
-$ npm run test:cov
-```
+Проект организован по стандартной структуре NestJS:
 
-## Deployment
+- `src/modules/auth` — аутентификация, стратегии Passport, Guard’ы, выдача токенов
+- `src/modules/users` — управление пользователями
+- `src/modules/chat` — чаты/диалоги, сообщения
+- `src/modules/socket` — Socket.IO gateway’и
+- `src/modules/files` — интеграция с MinIO / AWS S3 для загрузки и получения файлов
+- `prisma/schema.prisma` — описание схемы БД
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+---
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## Аутентификация (Passport)
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+Используется **Passport** (например, `passport-jwt`):
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+- Регистрация / логин через REST-эндпоинты
+- **Access-токен** — JWT (подписывается сервером, короткоживущий)
+- **Refresh-токен** — opaque (не JWT, хранится и валидируется на сервере)
+- Доступ к защищённым ресурсам через NestJS Guards (`AuthGuard('jwt')` и т.п.)
+- Поддержка разных типов устройств (для каждого устройства может быть свой refresh-токен и своя сессия)
 
-## Resources
+Пример потоков:
+1. Клиент отправляет креды (`/auth/login`).
+2. В ответ получает:
+   - JWT access-токен (для авторизации в API и при подключении к Socket.IO),
+   - opaque refresh-токен (для обновления access-токена).
+3. Клиент использует access-токен в заголовке  
+   `Authorization: Bearer <access_token>`  
+   для защищённых запросов и подключения к Socket.IO.
+4. При истечении access-токена клиент отправляет refresh-токен на соответствующий эндпоинт (например, `/auth/refresh`) и получает новый access-токен (и при необходимости новый refresh-токен).
+5. Для разных устройств (web, mobile и т.п.) сервер может выдавать отдельные refresh-токены, позволяя управлять сессиями и разлогинивать конкретные устройства.
+---
 
-Check out a few resources that may come in handy when working with NestJS:
+## Реальное время (Socket.IO)
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+Socket.IO используется для:
 
-## Support
+- Подключения пользователей к комнатам (чаннелам/чатам)
+- Отправки и получения сообщений в реальном времени
+- Обновления статусов (онлайн/офлайн, seen, typing и др. — если реализовано)
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Типичный flow:
+1. Клиент подключается к Socket.IO с JWT-токеном (через query или headers).
+2. Сервер аутентифицирует пользователя и привязывает его к сокету.
+3. Клиент вступает в комнату чата (например, `room:<chatId>`).
+4. Сообщения отправляются в комнату и сохраняются в БД через Prisma.
 
-## Stay in touch
+---
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## Хранение файлов (MinIO / AWS)
 
-## License
+Файлы (изображения, документы и др.) загружаются через REST-эндпоинты или специальный модуль:
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- Файл принимается сервером
+- Сохраняется в S3-совместимое хранилище (MinIO или AWS S3)
+- В базе (Prisma) сохраняется метаинформация/URL
+- Клиент получает ссылку для скачивания/просмотра
+
+Переменные окружения (`S3_ENDPOINT`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_BUCKET_NAME`) используются для настройки клиента.
+
+---
