@@ -27,8 +27,8 @@ export class AuthController {
 
   @UseGuards(LocalAuthGuard)
   @Post("login")
-  login(@Response() res: FastifyReply, @User() user: UserPayload, @Body() dto: DeviceTypeDto) {
-    const { accessToken, refreshToken } = this.authService.login(user);
+  async login(@Response() res: FastifyReply, @User() user: UserPayload, @Body() dto: DeviceTypeDto) {
+    const { accessToken, refreshToken } = await this.authService.login(user);
 
     if (dto.deviceType == DeviceType.WEB) {
       this.cookieService.setCookie(res, "refresh_token", refreshToken);

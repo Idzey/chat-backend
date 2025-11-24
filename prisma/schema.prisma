@@ -1,11 +1,17 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
+
 
 model Chat {
   id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -14,7 +20,7 @@ model Chat {
   avatar       String?
   isActive     Boolean    @default(true)
   createdAt    DateTime   @default(now()) @db.Timestamptz(6)
-  updatedAt    DateTime   @updatedAt @db.Timestamptz(6)
+  updatedAt    DateTime   @default(now()) @updatedAt @db.Timestamptz(6)
   messages     Message[]
   participants UserChat[]
 
@@ -34,7 +40,7 @@ model Message {
   fileId    String?       @db.Uuid
   duration  Int?          
   createdAt DateTime      @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime      @updatedAt @db.Timestamptz(6)
+  updatedAt DateTime      @default(now()) @updatedAt @db.Timestamptz(6)
   reads     MessageRead[]
   chat      Chat          @relation(fields: [chatId], references: [id], onDelete: Cascade, map: "fk_chat_msg")
   sender    Users         @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_user_msg")
@@ -90,6 +96,7 @@ model Users {
   sentMessages Message[]
   userChats    UserChat[]
   uploadedFiles File[]
+  refreshTokens RefreshToken[]
 
   @@index([status])
   @@index([lastSeen])
@@ -116,6 +123,19 @@ model File {
   @@index([mimeType])
   @@index([type])
   @@map("files")
+}
+
+model RefreshToken {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String   @db.Uuid
+  token      String   @unique
+  expiresAt  DateTime @db.Timestamptz(6)
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+  user       Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
 }
 
 enum FileType {

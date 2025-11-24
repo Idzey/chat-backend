@@ -3,8 +3,10 @@ import { MessagesController } from "./messages/messages.controller";
 import { MessagesService } from "./messages/messages.service";
 import { ChatsController } from "./chats.controller";
 import { ChatsService } from "./chats.service";
+import { FilesModule } from "../files/files.module";
 
 @Module({
+    imports: [FilesModule],
     controllers: [MessagesController, ChatsController],
     providers: [MessagesService, ChatsService],
     exports: [MessagesService, ChatsService],

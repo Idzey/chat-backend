@@ -3,8 +3,9 @@ import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/modules/libs/prisma/prisma.service";
 import { CreateMessageDto } from "./dto/create-message.dto";
 import { Server, Socket } from "socket.io";
-import { Message } from "@prisma/client";
 import { ChatsService } from "../chats/chats.service";
+import { Message } from '@prisma/client';
+
 @Injectable()
 export class SocketService {
   constructor(
@@ -14,16 +15,17 @@ export class SocketService {
   ) {}
 
   async sendMessage(userId: string, dto: CreateMessageDto) {
-    const { chatId, content, type } = dto;
-    const createdMessage = await this.MessagesService.createMessage(
+  return this.prisma.message.create({
+    data: {
+      chatId: dto.chatId,
       userId,
-      chatId,
-      content,
-      type
-    );
-
-    return createdMessage;
-  }
+      content: dto.content ?? "",
+      type: dto.type,
+      fileId: dto.fileId ?? null,
+    },
+    include: { file: true, sender: true },
+  });
+}
 
   connectUser(userId: string, socket: Socket) {
     void socket.join(`user:${userId}`);

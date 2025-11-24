@@ -10,6 +10,6 @@ export const User = createParamDecorator(
       throw new Error('User not found in request. Make sure authentication middleware is applied.');
     }
 
-    return request.user as Users;
+    return request.user;
   },
 );

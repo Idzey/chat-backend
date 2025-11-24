@@ -1,5 +1,5 @@
 import { MessageType } from "@prisma/client";
-import { IsNotEmpty, IsString } from "class-validator";
+import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class CreateMessageDto {
   @IsString()
@@ -13,4 +13,8 @@ export class CreateMessageDto {
   @IsString()
   @IsNotEmpty()
   type: MessageType;
+
+  @IsString()
+  @IsOptional()
+  fileId?: string;
 }

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   UnauthorizedException,
@@ -7,7 +8,6 @@ import { JwtService } from '@nestjs/jwt';
 import { UserPayload } from 'interfaces/auth/userPayload';
 import { CreateUserDto } from './dto/createUser.dto';
 import jwtPayload from 'interfaces/auth/jwtPayload';
-import RefreshTokenPayload from 'interfaces/auth/refreshTokenPayload';
 import { PasswordService } from './services/password.service';
 import { TokenService } from './services/token.service';
 import { PrismaService } from '../libs/prisma/prisma.service';
@@ -73,6 +73,7 @@ export class AuthService {
     if (!user.passwordHash) {
       return null;
     }
+
     const isPasswordValid = await this.passwordService.comparePassword(
       password,
       user.passwordHash,
@@ -85,14 +86,14 @@ export class AuthService {
     return user as UserPayload;
   }
 
-  login(user: UserPayload) {
+  async login(user: UserPayload) {
     const payload: jwtPayload = {
       sub: user.id,
       email: user.email,
       name: user.name ?? '',
     };
 
-    const { accessToken, refreshToken } = this.auth(payload);
+    const { accessToken, refreshToken } = await this.auth(payload);
     
     return {
       accessToken,
@@ -100,9 +101,21 @@ export class AuthService {
     };
   }
 
-  private auth(payload: jwtPayload) {
+  private async auth(payload: jwtPayload) {
     const { accessToken, refreshToken } =
-      this.tokenService.generateAuthTokens(payload);
+      this.tokenService.getAuthTokens(payload);
+
+    const refreshTokenRecord = await this.prisma.refreshToken.create({
+      data: {
+        token: refreshToken,
+        userId: payload.sub,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
+    });
+
+    if (!refreshTokenRecord) {
+      throw new UnauthorizedException('Could not create refresh token');
+    }
 
     return {
       accessToken,
@@ -115,14 +128,17 @@ export class AuthService {
       throw new UnauthorizedException('No refresh token provided');
     }
 
-    const refreshPayload: RefreshTokenPayload =
-      this.jwtService.verify(refreshToken);
+    const refreshValidation = await this.prisma.refreshToken.findUnique({
+      where: {
+        token: refreshToken,
+      },
+    });
 
-    if (refreshPayload.type !== 'refresh') {
-      throw new UnauthorizedException('Invalid refresh token type');
+    if (!refreshValidation || refreshValidation.expiresAt < new Date()) {
+      throw new BadRequestException('Token expired');
     }
 
-    const user = await this.findUserById(refreshPayload.sub);
+    const user = await this.findUserById(refreshValidation.userId);
 
     if (!user) {
       throw new UnauthorizedException('User not found');
@@ -134,7 +150,7 @@ export class AuthService {
       name: user.name ?? '',
     };
 
-    const { accessToken, refreshToken: newRefreshToken } = this.auth(payload);
+    const { accessToken, refreshToken: newRefreshToken } = await this.auth(payload);
 
     return {
       accessToken,
