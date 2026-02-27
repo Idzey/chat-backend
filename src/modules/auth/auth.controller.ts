@@ -7,6 +7,7 @@ import {
   Request,
   BadRequestException,
 } from "@nestjs/common";
+import { ApiTags, ApiOperation, ApiResponse, ApiBody } from "@nestjs/swagger";
 import { AuthService } from "./auth.service";
 import { LocalAuthGuard } from "../../common/guards/local-auth.guard";
 import { CreateUserDto } from "./dto/createUser.dto";
@@ -18,25 +19,37 @@ import { DeviceTypeDto } from "./dto/deviceType.dto";
 import { DeviceType } from "interfaces/auth/DeviceType";
 import { ExtractJwt } from "passport-jwt";
 
+@ApiTags("auth")
 @Controller("auth")
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly cookieService: CookieService
+    private readonly cookieService: CookieService,
   ) {}
 
+  @ApiOperation({ summary: "Login with email and password" })
+  @ApiResponse({
+    status: 200,
+    description: "Returns accessToken (and refreshToken for mobile)",
+  })
+  @ApiResponse({ status: 401, description: "Invalid credentials" })
+  @ApiBody({ type: DeviceTypeDto })
   @UseGuards(LocalAuthGuard)
   @Post("login")
-  async login(@Response() res: FastifyReply, @User() user: UserPayload, @Body() dto: DeviceTypeDto) {
+  async login(
+    @Response() res: FastifyReply,
+    @User() user: UserPayload,
+    @Body() dto: DeviceTypeDto,
+  ) {
     const { accessToken, refreshToken } = await this.authService.login(user);
 
     if (dto.deviceType == DeviceType.WEB) {
       this.cookieService.setCookie(res, "refresh_token", refreshToken);
     }
-    
+
     const data = {
       accessToken,
-    }
+    };
 
     if (dto.deviceType == DeviceType.MOBILE) {
       Object.assign(data, { refreshToken });
@@ -45,6 +58,12 @@ export class AuthController {
     return res.status(200).send(data);
   }
 
+  @ApiOperation({ summary: "Register a new user" })
+  @ApiResponse({ status: 201, description: "User created successfully" })
+  @ApiResponse({
+    status: 400,
+    description: "Validation error or email already in use",
+  })
   @Post("signup")
   async signup(@Body() dto: CreateUserDto) {
     await this.authService.createUser(dto);
@@ -52,11 +71,16 @@ export class AuthController {
     return { message: "User created successfully" };
   }
 
+  @ApiOperation({
+    summary: "Refresh access token (cookie for WEB, Bearer for MOBILE)",
+  })
+  @ApiResponse({ status: 200, description: "Returns new accessToken" })
+  @ApiResponse({ status: 400, description: "Missing or invalid refresh token" })
   @Post("refresh")
   async refresh(
     @Response() res: FastifyReply,
     @Request() req: FastifyRequest,
-    @Body() dto: DeviceTypeDto
+    @Body() dto: DeviceTypeDto,
   ) {
     let refreshToken: string | null;
 

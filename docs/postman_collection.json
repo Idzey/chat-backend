@@ -1,0 +1,582 @@
+{
+  "info": {
+    "name": "Chat Backend API",
+    "description": "REST API collection for the Chat application. Set the `baseUrl` variable and authenticate via /auth/login or /auth/signup to get an access token.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "chat-backend"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "chatId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "messageId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Authentication endpoints – register, login, refresh tokens.",
+      "item": [
+        {
+          "name": "Sign Up",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/auth/signup",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "signup"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"P@ssword123\",\n  \"name\": \"John Doe\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Register a new user account. Returns `{ message: 'User created successfully' }`."
+          }
+        },
+        {
+          "name": "Login (WEB)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', json.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"P@ssword123\",\n  \"deviceType\": \"WEB\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Login with email + password. For WEB, the refresh token is set as an HTTP-only cookie. Saves `accessToken` to the collection variable automatically."
+          }
+        },
+        {
+          "name": "Login (MOBILE)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', json.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"P@ssword123\",\n  \"deviceType\": \"MOBILE\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Login for mobile clients. Returns both `accessToken` and `refreshToken` in the response body."
+          }
+        },
+        {
+          "name": "Refresh Token (WEB)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceType\": \"WEB\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Refresh access token. For WEB the refresh token is read from the `refresh_token` cookie."
+          }
+        },
+        {
+          "name": "Refresh Token (MOBILE)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "<REFRESH_TOKEN>", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceType\": \"MOBILE\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Refresh access token for mobile. Send the refresh token as a Bearer token in the Authorization header."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "description": "User profile management endpoints.",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "me"]
+            },
+            "description": "Returns the profile of the currently authenticated user."
+          }
+        },
+        {
+          "name": "Search Users by Username",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/search/:username",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "search", ":username"],
+              "variable": [{ "key": "username", "value": "john" }]
+            },
+            "description": "Search for users by username prefix. Requires authentication."
+          }
+        },
+        {
+          "name": "Get Public Profile by ID",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", ":id"],
+              "variable": [{ "key": "id", "value": "{{userId}}" }]
+            },
+            "description": "Fetch a public user profile by its ID. Does not require authentication."
+          }
+        },
+        {
+          "name": "Complete Registration",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/users/complete-registration",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "complete-registration"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Set first name and last name after initial registration."
+          }
+        },
+        {
+          "name": "Check Username Availability",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/check-username/:username",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "check-username", ":username"],
+              "variable": [{ "key": "username", "value": "johndoe" }]
+            },
+            "description": "Check whether a username is already taken."
+          }
+        },
+        {
+          "name": "Check Email Availability",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/users/check-email",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "check-email"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Check whether an email address is already registered."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Chats",
+      "description": "Chat room creation, retrieval, update, deletion, and participant management.",
+      "item": [
+        {
+          "name": "Get My Chats",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/chats/user-chats",
+              "host": ["{{baseUrl}}"],
+              "path": ["chats", "user-chats"]
+            },
+            "description": "Returns all chat rooms the authenticated user is a member of."
+          }
+        },
+        {
+          "name": "Create Chat",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.id) { pm.collectionVariables.set('chatId', json.id); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/chats",
+              "host": ["{{baseUrl}}"],
+              "path": ["chats"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"My Group Chat\",\n  \"participantIds\": []\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Create a new group chat. Saves the returned `id` to `chatId` variable."
+          }
+        },
+        {
+          "name": "Get Chat by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/chats/:chatId",
+              "host": ["{{baseUrl}}"],
+              "path": ["chats", ":chatId"],
+              "variable": [{ "key": "chatId", "value": "{{chatId}}" }]
+            }
+          }
+        },
+        {
+          "name": "Update Chat",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/chats/:chatId",
+              "host": ["{{baseUrl}}"],
+              "path": ["chats", ":chatId"],
+              "variable": [{ "key": "chatId", "value": "{{chatId}}" }]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Chat Name\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Delete Chat",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/chats/:chatId",
+              "host": ["{{baseUrl}}"],
+              "path": ["chats", ":chatId"],
+              "variable": [{ "key": "chatId", "value": "{{chatId}}" }]
+            }
+          }
+        },
+        {
+          "name": "Get or Create Private Chat",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/chats/private",
+              "host": ["{{baseUrl}}"],
+              "path": ["chats", "private"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Get an existing DM chat or create a new one with the specified user."
+          }
+        },
+        {
+          "name": "Add Participant",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/chats/:chatId/participants",
+              "host": ["{{baseUrl}}"],
+              "path": ["chats", ":chatId", "participants"],
+              "variable": [{ "key": "chatId", "value": "{{chatId}}" }]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Remove Participant",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/chats/:chatId/participants/:userId",
+              "host": ["{{baseUrl}}"],
+              "path": ["chats", ":chatId", "participants", ":userId"],
+              "variable": [
+                { "key": "chatId", "value": "{{chatId}}" },
+                { "key": "userId", "value": "{{userId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Participant Role",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/chats/:chatId/participants/:userId/role",
+              "host": ["{{baseUrl}}"],
+              "path": ["chats", ":chatId", "participants", ":userId", "role"],
+              "variable": [
+                { "key": "chatId", "value": "{{chatId}}" },
+                { "key": "userId", "value": "{{userId}}" }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"MODERATOR\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Change a participant role. Allowed values: `ADMIN`, `MODERATOR`, `MEMBER`."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "description": "Message CRUD operations within a chat room.",
+      "item": [
+        {
+          "name": "Get Messages",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/chats/:chatId/messages",
+              "host": ["{{baseUrl}}"],
+              "path": ["chats", ":chatId", "messages"],
+              "variable": [{ "key": "chatId", "value": "{{chatId}}" }]
+            },
+            "description": "Get paginated messages for a chat room."
+          }
+        },
+        {
+          "name": "Create Message (REST)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.id) { pm.collectionVariables.set('messageId', json.id); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/chats/:chatId/messages",
+              "host": ["{{baseUrl}}"],
+              "path": ["chats", ":chatId", "messages"],
+              "variable": [{ "key": "chatId", "value": "{{chatId}}" }]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Hello, world!\",\n  \"type\": \"TEXT\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Create a message via REST (for testing). In production, prefer the WebSocket `message:send` event."
+          }
+        },
+        {
+          "name": "Get Message by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/chats/:chatId/messages/:messageId",
+              "host": ["{{baseUrl}}"],
+              "path": ["chats", ":chatId", "messages", ":messageId"],
+              "variable": [
+                { "key": "chatId", "value": "{{chatId}}" },
+                { "key": "messageId", "value": "{{messageId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Message",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/chats/:chatId/messages/:messageId",
+              "host": ["{{baseUrl}}"],
+              "path": ["chats", ":chatId", "messages", ":messageId"],
+              "variable": [
+                { "key": "chatId", "value": "{{chatId}}" },
+                { "key": "messageId", "value": "{{messageId}}" }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Updated message content\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Delete Message",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/chats/:chatId/messages/:messageId",
+              "host": ["{{baseUrl}}"],
+              "path": ["chats", ":chatId", "messages", ":messageId"],
+              "variable": [
+                { "key": "chatId", "value": "{{chatId}}" },
+                { "key": "messageId", "value": "{{messageId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Mark Message as Read",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/chats/:chatId/messages/:messageId/read",
+              "host": ["{{baseUrl}}"],
+              "path": ["chats", ":chatId", "messages", ":messageId", "read"],
+              "variable": [
+                { "key": "chatId", "value": "{{chatId}}" },
+                { "key": "messageId", "value": "{{messageId}}" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Files",
+      "description": "File upload to MinIO / S3 storage.",
+      "item": [
+        {
+          "name": "Upload File",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/files/upload",
+              "host": ["{{baseUrl}}"],
+              "path": ["files", "upload"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "The file to upload (image, document, etc.)"
+                }
+              ]
+            },
+            "description": "Upload a file using `multipart/form-data`. Returns a presigned URL for accessing the uploaded file."
+          }
+        }
+      ]
+    }
+  ]
+}

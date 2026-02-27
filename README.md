@@ -67,12 +67,15 @@ DATABASE_URL="postgresql://user:password@localhost:5432/chat?schema=public"
 JWT_SECRET="super-secret"
 JWT_EXPIRES_IN="7d"
 
-# S3 / MinIO
-S3_ENDPOINT="http://localhost:9000"
-S3_ACCESS_KEY="minio-access-key"
-S3_SECRET_KEY="minio-secret-key"
-S3_BUCKET_NAME="chat-files"
-S3_USE_SSL=false
+# MinIO
+MINIO_ENDPOINT="localhost"
+MINIO_PORT=9000
+MINIO_USE_SSL=false
+MINIO_ACCESS_KEY="minio-access-key"
+MINIO_SECRET_KEY="minio-secret-key"
+MINIO_REGION="us-east-1"
+MINIO_BUCKET="chat-files"
+MINIO_PRESIGNED_EXPIRES=3600
 
 # Прочие настройки (логирование, CORS и т.д.)
 NODE_ENV="development"
@@ -139,6 +142,7 @@ npm run start:prod
 - Поддержка разных типов устройств (для каждого устройства может быть свой refresh-токен и своя сессия)
 
 Пример потоков:
+
 1. Клиент отправляет креды (`/auth/login`).
 2. В ответ получает:
    - JWT access-токен (для авторизации в API и при подключении к Socket.IO),
@@ -148,6 +152,7 @@ npm run start:prod
    для защищённых запросов и подключения к Socket.IO.
 4. При истечении access-токена клиент отправляет refresh-токен на соответствующий эндпоинт (например, `/auth/refresh`) и получает новый access-токен (и при необходимости новый refresh-токен).
 5. Для разных устройств (web, mobile и т.п.) сервер может выдавать отдельные refresh-токены, позволяя управлять сессиями и разлогинивать конкретные устройства.
+
 ---
 
 ## Реальное время (Socket.IO)
@@ -159,6 +164,7 @@ Socket.IO используется для:
 - Обновления статусов (онлайн/офлайн, seen, typing и др. — если реализовано)
 
 Типичный flow:
+
 1. Клиент подключается к Socket.IO с JWT-токеном (через query или headers).
 2. Сервер аутентифицирует пользователя и привязывает его к сокету.
 3. Клиент вступает в комнату чата (например, `room:<chatId>`).
@@ -178,4 +184,3 @@ Socket.IO используется для:
 Переменные окружения (`S3_ENDPOINT`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_BUCKET_NAME`) используются для настройки клиента.
 
 ---
-
