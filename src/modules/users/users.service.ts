@@ -1,7 +1,8 @@
-import { PasswordService } from './../auth/services/password.service';
+import { PasswordService } from "./../auth/services/password.service";
 import { ConflictException, Injectable } from "@nestjs/common";
 import { PrismaService } from "src/modules/libs/prisma/prisma.service";
 import { CompleteUserDto } from "./dto/complete.dto";
+import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { isUUID } from "class-validator";
 
 @Injectable()
@@ -41,11 +42,7 @@ export class UsersService {
     return user;
   }
 
-  async createAccount(
-    name: string,
-    email: string,
-    password: string,
-  ) {
+  async createAccount(name: string, email: string, password: string) {
     let username = "";
     let isTaken = true;
 
@@ -99,7 +96,7 @@ export class UsersService {
 
     if (profile) {
       throw new ConflictException(
-        `User with id ${userId} already has a profile.`
+        `User with id ${userId} already has a profile.`,
       );
     }
 
@@ -124,12 +121,36 @@ export class UsersService {
       },
     });
 
-    return profiles.map((user) => 
-      user.id == userId ? {
-        ...user,
-        firstName: "Saved",
-        lastName: "Message"
-      } : user
+    return profiles.map((user) =>
+      user.id == userId
+        ? {
+            ...user,
+            firstName: "Saved",
+            lastName: "Message",
+          }
+        : user,
     );
+  }
+
+  async updateProfile(userId: string, dto: UpdateProfileDto) {
+    if (dto.username) {
+      const taken = await this.checkUsernameExists(dto.username);
+      const current = await this.findUserById(userId);
+      if (taken && current?.username !== dto.username) {
+        throw new ConflictException("Username is already taken");
+      }
+    }
+
+    return this.prisma.users.update({
+      where: { id: userId },
+      data: dto,
+    });
+  }
+
+  async updateAvatar(userId: string, avatarUrl: string) {
+    return this.prisma.users.update({
+      where: { id: userId },
+      data: { avatar: avatarUrl },
+    });
   }
 }

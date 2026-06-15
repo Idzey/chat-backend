@@ -108,4 +108,33 @@ export class AuthController {
 
     return res.status(200).send(data);
   }
+
+  @ApiOperation({ summary: "Logout and invalidate refresh token" })
+  @ApiResponse({ status: 200, description: "Logged out successfully" })
+  @ApiBody({ type: DeviceTypeDto })
+  @Post("logout")
+  async logout(
+    @Response() res: FastifyReply,
+    @Request() req: FastifyRequest,
+    @Body() dto: DeviceTypeDto,
+  ) {
+    let refreshToken: string | null;
+
+    if (dto.deviceType == DeviceType.WEB) {
+      refreshToken = this.cookieService.getCookie(req, "refresh_token");
+      this.cookieService.clearCookie(res, "refresh_token");
+    } else if (dto.deviceType == DeviceType.MOBILE) {
+      refreshToken = ExtractJwt.fromAuthHeaderAsBearerToken()(req) || null;
+    } else {
+      throw new BadRequestException("Invalid device type");
+    }
+
+    if (!refreshToken) {
+      throw new BadRequestException("Refresh token is required");
+    }
+
+    const result = await this.authService.logout(refreshToken);
+
+    return res.status(200).send(result);
+  }
 }

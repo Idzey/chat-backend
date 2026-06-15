@@ -1,0 +1,149 @@
+asyncapi: 2.5.0
+info:
+  title: Chat WebSocket API
+  description: Socket.IO real-time events documentation
+  version: '1.0'
+  contact: {}
+tags: []
+servers:
+  chat-backend:
+    url: ws://localhost:3000
+    protocol: socket.io
+components:
+  securitySchemes:
+    access-token:
+      scheme: bearer
+      bearerFormat: JWT
+      type: http
+  schemas:
+    Object:
+      type: object
+      properties: {}
+    CreateMessageDto:
+      type: object
+      properties:
+        content:
+          type: string
+          example: Hello, world!
+          description: Message content
+        chatId:
+          type: string
+          example: clxxxxxxxxxxxxx
+          description: Chat ID to send message to
+        type:
+          type: string
+          enum:
+            - TEXT
+            - IMAGE
+            - FILE
+            - VOICE
+            - VIDEO
+          example: TEXT
+          description: Message type
+        fileId:
+          type: string
+          example: clxxxxxxxxxxxxx
+          description: Attached file ID (optional)
+      required:
+        - content
+        - chatId
+        - type
+defaultContentType: application/json
+channels:
+  join_user:
+    subscribe:
+      summary: Join personal notification room for the authenticated user
+      message:
+        name: join_user
+        payload:
+          $ref: '#/components/schemas/Object'
+  join_chat:
+    subscribe:
+      summary: Join a chat room to receive its messages in real-time
+      message:
+        name: join_chat
+        payload:
+          $ref: '#/components/schemas/Object'
+  leave_chat:
+    subscribe:
+      summary: Leave a chat room
+      message:
+        name: leave_chat
+        payload:
+          $ref: '#/components/schemas/Object'
+  message:send:
+    subscribe:
+      summary: Send a message to a chat room
+      message:
+        name: CreateMessageDto
+        payload:
+          $ref: '#/components/schemas/CreateMessageDto'
+  message:new:
+    publish:
+      summary: Receive a new message broadcast to a chat room
+      message:
+        name: NewMessageEvent
+        payload:
+          $ref: '#/components/schemas/CreateMessageDto'
+  notification:
+    publish:
+      summary: Receive a notification for a new message (pushed to user room)
+      message:
+        name: NotificationEvent
+        payload:
+          $ref: '#/components/schemas/CreateMessageDto'
+  message:edit:
+    subscribe:
+      summary: Edit an existing message
+      message:
+        name: EditMessageEvent
+        payload:
+          $ref: '#/components/schemas/Object'
+  message:edited:
+    publish:
+      summary: Broadcast an edited message to a chat room
+      message:
+        name: EditedMessageEvent
+        payload:
+          $ref: '#/components/schemas/Object'
+  message:delete:
+    subscribe:
+      summary: Delete a message
+      message:
+        name: DeleteMessageEvent
+        payload:
+          $ref: '#/components/schemas/Object'
+  message:deleted:
+    publish:
+      summary: Broadcast a deleted message event to a chat room
+      message:
+        name: DeletedMessageEvent
+        payload:
+          $ref: '#/components/schemas/Object'
+  message:read:
+    subscribe:
+      summary: Mark a message as read
+      message:
+        name: ReadMessageEvent
+        payload:
+          $ref: '#/components/schemas/Object'
+    publish:
+      summary: Broadcast read status to a chat room
+      message:
+        name: ReadStatusEvent
+        payload:
+          $ref: '#/components/schemas/Object'
+  message:typing:
+    subscribe:
+      summary: Notify chat members that a user is typing
+      message:
+        name: TypingEvent
+        payload:
+          $ref: '#/components/schemas/Object'
+  message:stop_typing:
+    subscribe:
+      summary: Notify chat members that a user stopped typing
+      message:
+        name: StopTypingEvent
+        payload:
+          $ref: '#/components/schemas/Object'

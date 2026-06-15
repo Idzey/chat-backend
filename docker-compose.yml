@@ -1,14 +1,26 @@
 services:
   minio:
     image: minio/minio:latest
-    container_name: minio
+    container_name: chat_minio
     restart: always
     ports:
-      - "9000:9000"   # API (для SDK)
-      - "9001:9001"   # Web UI
+      - "9000:9000" # API (для SDK)
+      - "9001:9001" # Web UI
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
     volumes:
       - ./minio-data:/data
     command: server /data --console-address ":9001"
+
+  postgres:
+    image: postgres:latest
+    container_name: chat_postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: chat
+    volumes:
+      - ./postgres_data:/var/lib/postgresql

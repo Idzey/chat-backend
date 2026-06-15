@@ -5,7 +5,9 @@ import {
   Get,
   NotFoundException,
   Param,
+  Patch,
   Post,
+  Req,
   UnauthorizedException,
   UseGuards,
 } from "@nestjs/common";
@@ -16,17 +18,24 @@ import {
   ApiBearerAuth,
   ApiParam,
   ApiBody,
+  ApiConsumes,
 } from "@nestjs/swagger";
 import { User } from "src/common/decorators/user";
 import { CompleteUserDto } from "./dto/complete.dto";
+import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { UsersService } from "./users.service";
+import { FilesService } from "../files/files.service";
 import { JwtAuthGuard } from "src/common/guards/jwt-auth.guard";
 import { UserPayload } from "interfaces/auth/userPayload";
+import { FastifyRequest } from "fastify";
 
 @ApiTags("users")
 @Controller("users")
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly filesService: FilesService,
+  ) {}
 
   @ApiBearerAuth()
   @ApiOperation({ summary: "Get current authenticated user profile" })
@@ -45,6 +54,52 @@ export class UsersController {
     }
 
     return profile;
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Update current user profile (name, username)" })
+  @ApiResponse({ status: 200, description: "Updated user profile" })
+  @UseGuards(JwtAuthGuard)
+  @Patch("me")
+  async updateMe(@User() user: UserPayload, @Body() dto: UpdateProfileDto) {
+    return this.usersService.updateProfile(user.id, dto);
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Upload and update current user avatar" })
+  @ApiConsumes("multipart/form-data")
+  @ApiResponse({ status: 200, description: "Updated user with new avatar" })
+  @UseGuards(JwtAuthGuard)
+  @Patch("me/avatar")
+  async updateAvatar(@User() user: UserPayload, @Req() req: FastifyRequest) {
+    const file = await req.file();
+    if (!file) {
+      throw new BadRequestException("File is required");
+    }
+
+    const buffer = await file.toBuffer();
+    const expressFile: Express.Multer.File = {
+      fieldname: file.fieldname,
+      originalname: file.filename ?? file.fieldname,
+      encoding: file.encoding,
+      mimetype: file.mimetype,
+      size: buffer.length,
+      buffer,
+      destination: "",
+      filename: file.filename ?? file.fieldname,
+      path: "",
+      stream: file.file,
+    };
+
+    const saved = await this.filesService.uploadAndSaveFile(
+      expressFile,
+      user.id,
+      {
+        prefix: "avatars",
+      },
+    );
+
+    return this.usersService.updateAvatar(user.id, saved.url ?? saved.path);
   }
 
   @ApiBearerAuth()

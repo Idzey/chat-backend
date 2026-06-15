@@ -16,7 +16,7 @@ import { isUUID } from "validator";
 export class ChatsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly messagesService: MessagesService
+    private readonly messagesService: MessagesService,
   ) {}
 
   private checkChatUUID(chatId: string) {
@@ -44,7 +44,7 @@ export class ChatsService {
         lastMessage: await this.messagesService.getLastMessage(chat.id),
         unreadCount: 2,
         name: await this.getChatName(chat.id, userId),
-      }))
+      })),
     );
 
     return newChats;
@@ -110,7 +110,7 @@ export class ChatsService {
   async updateParticipantRole(
     userId: string,
     chatId: string,
-    role: "MODERATOR" | "ADMIN" | "MEMBER"
+    role: "MODERATOR" | "ADMIN" | "MEMBER",
   ) {
     this.checkChatUUID(chatId);
 
@@ -131,7 +131,7 @@ export class ChatsService {
     const { name, participantIds } = dto;
 
     const allParticipantIds = Array.from(
-      new Set([userId, ...(participantIds ?? [])])
+      new Set([userId, ...(participantIds ?? [])]),
     );
 
     const chat = await this.prisma.chat.create({
@@ -144,7 +144,7 @@ export class ChatsService {
         },
       },
     });
- 
+
     return chat;
   }
 
@@ -251,5 +251,22 @@ export class ChatsService {
     });
 
     return newChat.id;
+  }
+
+  async updateChatAvatar(userId: string, chatId: string, avatarUrl: string) {
+    this.checkChatUUID(chatId);
+
+    const participant = await this.prisma.userChat.findUnique({
+      where: { userId_chatId: { userId, chatId } },
+    });
+
+    if (!participant) {
+      throw new BadRequestException("You are not a member of this chat");
+    }
+
+    return this.prisma.chat.update({
+      where: { id: chatId },
+      data: { avatar: avatarUrl },
+    });
   }
 }

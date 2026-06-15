@@ -1,12 +1,14 @@
 import { MessagesService } from "./messages.service";
 import {
   BadRequestException,
+  Body,
   Controller,
   Delete,
   Get,
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from "@nestjs/common";
 import {
@@ -34,8 +36,8 @@ export class MessagesController {
   getMessages(
     @User() user: UserPayload,
     @Param("chatId") chatId: string,
-    @Param("limit") limit: number = 50,
-    @Param("offset") offset: number = 0,
+    @Query("limit") limit: number = 50,
+    @Query("offset") offset: number = 0,
   ) {
     if (!chatId) {
       throw new BadRequestException("Chat ID is required");
@@ -52,8 +54,8 @@ export class MessagesController {
   createMessage(
     @User() user: UserPayload,
     @Param("chatId") chatId: string,
-    @Param("content") content: string,
-    @Param("type") type: "TEXT" | "IMAGE" | "FILE" | "VOICE" | "VIDEO",
+    @Body("content") content: string,
+    @Body("type") type: "TEXT" | "IMAGE" | "FILE" | "VOICE" | "VIDEO",
   ) {
     if (!chatId || !content || !type) {
       throw new BadRequestException("Chat ID, content and type are required");
@@ -105,7 +107,7 @@ export class MessagesController {
     @User() user: UserPayload,
     @Param("chatId") chatId: string,
     @Param("messageId") messageId: string,
-    @Param("content") content: string,
+    @Body("content") content: string,
   ) {
     if (!chatId || !messageId || !content) {
       throw new BadRequestException(

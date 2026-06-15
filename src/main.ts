@@ -6,6 +6,9 @@ import fastifyMultipart from "@fastify/multipart";
 import fastifyCookie from "@fastify/cookie";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import { AsyncApiModule, AsyncApiDocumentBuilder } from "nestjs-asyncapi";
+import * as fs from "fs";
+import * as path from "path";
+import * as yaml from "js-yaml";
 
 async function bootstrap() {
   const fastifyAdapter = new FastifyAdapter();
@@ -55,6 +58,17 @@ async function bootstrap() {
     yamlDocumentUrl: "api/docs-yaml",
   });
 
+  const docsDir = path.resolve(process.cwd(), "docs");
+  if (!fs.existsSync(docsDir)) fs.mkdirSync(docsDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(docsDir, "swagger.json"),
+    JSON.stringify(swaggerDocument, null, 2),
+  );
+  fs.writeFileSync(
+    path.join(docsDir, "swagger.yaml"),
+    yaml.dump(swaggerDocument),
+  );
+
   const asyncApiOptions = new AsyncApiDocumentBuilder()
     .setTitle("Chat WebSocket API")
     .setDescription("Socket.IO real-time events documentation")
@@ -72,6 +86,15 @@ async function bootstrap() {
 
   const asyncApiDocument = AsyncApiModule.createDocument(app, asyncApiOptions);
   await AsyncApiModule.setup("/async-api", app, asyncApiDocument);
+
+  fs.writeFileSync(
+    path.join(docsDir, "asyncapi.json"),
+    JSON.stringify(asyncApiDocument, null, 2),
+  );
+  fs.writeFileSync(
+    path.join(docsDir, "asyncapi.yaml"),
+    yaml.dump(asyncApiDocument),
+  );
 
   await app.listen(process.env.PORT ?? 3000, "0.0.0.0");
 }

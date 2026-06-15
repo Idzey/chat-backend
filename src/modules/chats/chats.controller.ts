@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -6,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Req,
   UseGuards,
 } from "@nestjs/common";
 import {
@@ -14,8 +16,10 @@ import {
   ApiResponse,
   ApiBearerAuth,
   ApiParam,
+  ApiConsumes,
 } from "@nestjs/swagger";
 import { ChatsService } from "./chats.service";
+import { FilesService } from "../files/files.service";
 import { User } from "src/common/decorators/user";
 import {
   AddUserToChatDto,
@@ -26,12 +30,16 @@ import {
 } from "./dto/chats.dto";
 import { JwtAuthGuard } from "src/common/guards/jwt-auth.guard";
 import { UserPayload } from "interfaces/auth/userPayload";
+import { FastifyRequest } from "fastify";
 
 @ApiTags("chats")
 @ApiBearerAuth()
 @Controller("/chats")
 export class ChatsController {
-  constructor(private readonly chatsService: ChatsService) {}
+  constructor(
+    private readonly chatsService: ChatsService,
+    private readonly filesService: FilesService,
+  ) {}
 
   @ApiOperation({ summary: "Get all chats for the current user" })
   @ApiResponse({ status: 200, description: "List of user chats" })
@@ -72,6 +80,51 @@ export class ChatsController {
     @Body() dto: UpdateChatDto,
   ) {
     return await this.chatsService.updateChat(user.id, chatId, dto);
+  }
+
+  @ApiOperation({ summary: "Upload and update group chat avatar" })
+  @ApiParam({ name: "chatId", description: "Chat ID" })
+  @ApiConsumes("multipart/form-data")
+  @ApiResponse({ status: 200, description: "Chat with updated avatar" })
+  @UseGuards(JwtAuthGuard)
+  @Patch(":chatId/avatar")
+  async updateChatAvatar(
+    @User() user: UserPayload,
+    @Param("chatId") chatId: string,
+    @Req() req: FastifyRequest,
+  ) {
+    const file = await req.file();
+    if (!file) {
+      throw new BadRequestException("File is required");
+    }
+
+    const buffer = await file.toBuffer();
+    const expressFile: Express.Multer.File = {
+      fieldname: file.fieldname,
+      originalname: file.filename ?? file.fieldname,
+      encoding: file.encoding,
+      mimetype: file.mimetype,
+      size: buffer.length,
+      buffer,
+      destination: "",
+      filename: file.filename ?? file.fieldname,
+      path: "",
+      stream: file.file,
+    };
+
+    const saved = await this.filesService.uploadAndSaveFile(
+      expressFile,
+      user.id,
+      {
+        prefix: "chat-avatars",
+      },
+    );
+
+    return this.chatsService.updateChatAvatar(
+      user.id,
+      chatId,
+      saved.url ?? saved.path,
+    );
   }
 
   @ApiOperation({ summary: "Delete a chat" })

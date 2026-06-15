@@ -3,15 +3,15 @@ import {
   ConflictException,
   Injectable,
   UnauthorizedException,
-} from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { UserPayload } from 'interfaces/auth/userPayload';
-import { CreateUserDto } from './dto/createUser.dto';
-import jwtPayload from 'interfaces/auth/jwtPayload';
-import { PasswordService } from './services/password.service';
-import { TokenService } from './services/token.service';
-import { PrismaService } from '../libs/prisma/prisma.service';
-import { UsersService } from '../users/users.service';
+} from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+import { UserPayload } from "interfaces/auth/userPayload";
+import { CreateUserDto } from "./dto/createUser.dto";
+import jwtPayload from "interfaces/auth/jwtPayload";
+import { PasswordService } from "./services/password.service";
+import { TokenService } from "./services/token.service";
+import { PrismaService } from "../libs/prisma/prisma.service";
+import { UsersService } from "../users/users.service";
 
 @Injectable()
 export class AuthService {
@@ -35,7 +35,7 @@ export class AuthService {
     const checkEmailExists = await this.findUserByEmail(email);
 
     if (checkEmailExists) {
-      throw new ConflictException('Email already exists');
+      throw new ConflictException("Email already exists");
     }
 
     const user = this.usersService.createAccount(name, email, password);
@@ -69,7 +69,7 @@ export class AuthService {
     if (!user) {
       return null;
     }
-    
+
     if (!user.passwordHash) {
       return null;
     }
@@ -78,7 +78,7 @@ export class AuthService {
       password,
       user.passwordHash,
     );
-    
+
     if (!isPasswordValid) {
       return null;
     }
@@ -90,11 +90,11 @@ export class AuthService {
     const payload: jwtPayload = {
       sub: user.id,
       email: user.email,
-      name: user.name ?? '',
+      name: user.name ?? "",
     };
 
     const { accessToken, refreshToken } = await this.auth(payload);
-    
+
     return {
       accessToken,
       refreshToken,
@@ -114,18 +114,18 @@ export class AuthService {
     });
 
     if (!refreshTokenRecord) {
-      throw new UnauthorizedException('Could not create refresh token');
+      throw new UnauthorizedException("Could not create refresh token");
     }
 
     return {
       accessToken,
-      refreshToken
+      refreshToken,
     };
   }
 
   async refresh(refreshToken: string) {
     if (!refreshToken) {
-      throw new UnauthorizedException('No refresh token provided');
+      throw new UnauthorizedException("No refresh token provided");
     }
 
     const refreshValidation = await this.prisma.refreshToken.findUnique({
@@ -135,26 +135,34 @@ export class AuthService {
     });
 
     if (!refreshValidation || refreshValidation.expiresAt < new Date()) {
-      throw new BadRequestException('Token expired');
+      throw new BadRequestException("Token expired");
     }
 
     const user = await this.findUserById(refreshValidation.userId);
 
     if (!user) {
-      throw new UnauthorizedException('User not found');
+      throw new UnauthorizedException("User not found");
     }
 
     const payload: jwtPayload = {
       sub: user.id,
       email: user.email,
-      name: user.name ?? '',
+      name: user.name ?? "",
     };
 
-    const { accessToken, refreshToken: newRefreshToken } = await this.auth(payload);
+    const { accessToken, refreshToken: newRefreshToken } =
+      await this.auth(payload);
 
     return {
       accessToken,
       refreshToken: newRefreshToken,
     };
+  }
+
+  async logout(refreshToken: string) {
+    await this.prisma.refreshToken.deleteMany({
+      where: { token: refreshToken },
+    });
+    return { message: "Logged out successfully" };
   }
 }

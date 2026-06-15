@@ -1,0 +1,1091 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/": {
+      "get": {
+        "operationId": "AppController_getHello",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "App"
+        ]
+      }
+    },
+    "/users/me": {
+      "get": {
+        "operationId": "UsersController_getMe",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Returns user profile"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get current authenticated user profile",
+        "tags": [
+          "users"
+        ]
+      },
+      "patch": {
+        "operationId": "UsersController_updateMe",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated user profile"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update current user profile (name, username)",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/me/avatar": {
+      "patch": {
+        "operationId": "UsersController_updateAvatar",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Updated user with new avatar"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upload and update current user avatar",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/search/{username}": {
+      "get": {
+        "operationId": "UsersController_getAllProfiles",
+        "parameters": [
+          {
+            "name": "username",
+            "required": true,
+            "in": "path",
+            "description": "Username to search for",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns list of matching user profiles"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Search users by username",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "operationId": "UsersController_getProfile",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "User ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns user profile"
+          },
+          "404": {
+            "description": "Profile not found"
+          }
+        },
+        "summary": "Get public user profile by ID",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/complete-registration": {
+      "post": {
+        "operationId": "UsersController_completeRegistration",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registration completed"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Complete user registration with first/last name",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/check-username/{username}": {
+      "get": {
+        "operationId": "UsersController_checkUsernameExists",
+        "parameters": [
+          {
+            "name": "username",
+            "required": true,
+            "in": "path",
+            "description": "Username to check",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Check if username is taken",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/check-email": {
+      "post": {
+        "operationId": "UsersController_checkEmailExists",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Check if email is taken",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceTypeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns accessToken (and refreshToken for mobile)"
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        },
+        "summary": "Login with email and password",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/signup": {
+      "post": {
+        "operationId": "AuthController_signup",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully"
+          },
+          "400": {
+            "description": "Validation error or email already in use"
+          }
+        },
+        "summary": "Register a new user",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refresh",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceTypeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns new accessToken"
+          },
+          "400": {
+            "description": "Missing or invalid refresh token"
+          }
+        },
+        "summary": "Refresh access token (cookie for WEB, Bearer for MOBILE)",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceTypeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Logged out successfully"
+          }
+        },
+        "summary": "Logout and invalidate refresh token",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/files/upload": {
+      "post": {
+        "operationId": "FilesController_generateUploadUrl",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Returns the uploaded file URL"
+          },
+          "400": {
+            "description": "No file provided"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upload a file to MinIO storage",
+        "tags": [
+          "files"
+        ]
+      }
+    },
+    "/chats/{chatId}/messages": {
+      "get": {
+        "operationId": "MessagesController_getMessages",
+        "parameters": [
+          {
+            "name": "chatId",
+            "required": true,
+            "in": "path",
+            "description": "Chat ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of messages"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get messages in a chat (paginated)",
+        "tags": [
+          "messages"
+        ]
+      },
+      "post": {
+        "operationId": "MessagesController_createMessage",
+        "parameters": [
+          {
+            "name": "chatId",
+            "required": true,
+            "in": "path",
+            "description": "Chat ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created message"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a message in a chat (REST fallback)",
+        "tags": [
+          "messages"
+        ]
+      }
+    },
+    "/chats/{chatId}/messages/{messageId}": {
+      "get": {
+        "operationId": "MessagesController_getMessage",
+        "parameters": [
+          {
+            "name": "chatId",
+            "required": true,
+            "in": "path",
+            "description": "Chat ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "Message ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a single message by ID",
+        "tags": [
+          "messages"
+        ]
+      },
+      "delete": {
+        "operationId": "MessagesController_deleteMessage",
+        "parameters": [
+          {
+            "name": "chatId",
+            "required": true,
+            "in": "path",
+            "description": "Chat ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "Message ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a message",
+        "tags": [
+          "messages"
+        ]
+      },
+      "patch": {
+        "operationId": "MessagesController_updateMessage",
+        "parameters": [
+          {
+            "name": "chatId",
+            "required": true,
+            "in": "path",
+            "description": "Chat ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "Message ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Edit a message content",
+        "tags": [
+          "messages"
+        ]
+      }
+    },
+    "/chats/{chatId}/messages/{messageId}/read": {
+      "post": {
+        "operationId": "MessagesController_markMessageAsRead",
+        "parameters": [
+          {
+            "name": "chatId",
+            "required": true,
+            "in": "path",
+            "description": "Chat ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "Message ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark a message as read",
+        "tags": [
+          "messages"
+        ]
+      }
+    },
+    "/chats/user-chats": {
+      "get": {
+        "operationId": "ChatsController_getUserChats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of user chats"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all chats for the current user",
+        "tags": [
+          "chats"
+        ]
+      }
+    },
+    "/chats": {
+      "post": {
+        "operationId": "ChatsController_createChat",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateChatDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created chat object"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new group chat",
+        "tags": [
+          "chats"
+        ]
+      }
+    },
+    "/chats/{chatId}": {
+      "get": {
+        "operationId": "ChatsController_getChatById",
+        "parameters": [
+          {
+            "name": "chatId",
+            "required": true,
+            "in": "path",
+            "description": "Chat ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chat object"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get chat by ID",
+        "tags": [
+          "chats"
+        ]
+      },
+      "patch": {
+        "operationId": "ChatsController_updateChat",
+        "parameters": [
+          {
+            "name": "chatId",
+            "required": true,
+            "in": "path",
+            "description": "Chat ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateChatDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated chat object"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update chat name",
+        "tags": [
+          "chats"
+        ]
+      },
+      "delete": {
+        "operationId": "ChatsController_deleteChat",
+        "parameters": [
+          {
+            "name": "chatId",
+            "required": true,
+            "in": "path",
+            "description": "Chat ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chat deleted"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a chat",
+        "tags": [
+          "chats"
+        ]
+      }
+    },
+    "/chats/{chatId}/avatar": {
+      "patch": {
+        "operationId": "ChatsController_updateChatAvatar",
+        "parameters": [
+          {
+            "name": "chatId",
+            "required": true,
+            "in": "path",
+            "description": "Chat ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chat with updated avatar"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upload and update group chat avatar",
+        "tags": [
+          "chats"
+        ]
+      }
+    },
+    "/chats/{chatId}/participants": {
+      "post": {
+        "operationId": "ChatsController_addUserToChat",
+        "parameters": [
+          {
+            "name": "chatId",
+            "required": true,
+            "in": "path",
+            "description": "Chat ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddUserToChatDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a user to a chat",
+        "tags": [
+          "chats"
+        ]
+      }
+    },
+    "/chats/{chatId}/participants/{userId}": {
+      "delete": {
+        "operationId": "ChatsController_removeUserFromChat",
+        "parameters": [
+          {
+            "name": "chatId",
+            "required": true,
+            "in": "path",
+            "description": "Chat ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "description": "User ID to remove",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a user from a chat",
+        "tags": [
+          "chats"
+        ]
+      }
+    },
+    "/chats/{chatId}/participants/{userId}/role": {
+      "patch": {
+        "operationId": "ChatsController_updateParticipantRole",
+        "parameters": [
+          {
+            "name": "chatId",
+            "required": true,
+            "in": "path",
+            "description": "Chat ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "description": "User ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update participant role in a chat",
+        "tags": [
+          "chats"
+        ]
+      }
+    },
+    "/chats/private": {
+      "post": {
+        "operationId": "ChatsController_getOrCreatePrivateChat",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetOrCreateChatDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Private chat object"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get or create a private (DM) chat with another user",
+        "tags": [
+          "chats"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Chat Backend API",
+    "description": "REST API documentation for the Chat application",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [
+    {
+      "name": "auth",
+      "description": "Authentication endpoints"
+    },
+    {
+      "name": "users",
+      "description": "User profile management"
+    },
+    {
+      "name": "chats",
+      "description": "Chat room management"
+    },
+    {
+      "name": "messages",
+      "description": "Chat message operations"
+    },
+    {
+      "name": "files",
+      "description": "File upload & storage"
+    }
+  ],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "access-token": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "UpdateProfileDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "username": {
+            "type": "string",
+            "example": "johndoe"
+          }
+        }
+      },
+      "CompleteUserDto": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "example": "John",
+            "description": "First name"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Doe",
+            "description": "Last name"
+          }
+        },
+        "required": [
+          "firstName",
+          "lastName"
+        ]
+      },
+      "DeviceTypeDto": {
+        "type": "object",
+        "properties": {
+          "deviceType": {
+            "type": "string",
+            "enum": [
+              "MOBILE",
+              "WEB"
+            ],
+            "example": "WEB",
+            "description": "Client device type"
+          }
+        },
+        "required": [
+          "deviceType"
+        ]
+      },
+      "CreateUserDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user@example.com",
+            "description": "User email address"
+          },
+          "password": {
+            "type": "string",
+            "example": "P@ssword123",
+            "description": "Password (8-20 characters)",
+            "minLength": 8,
+            "maxLength": 20
+          },
+          "name": {
+            "type": "string",
+            "example": "John Doe",
+            "description": "Display name (2-50 characters)",
+            "minLength": 2,
+            "maxLength": 50
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "name"
+        ]
+      },
+      "CreateChatDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "General",
+            "description": "Chat name"
+          },
+          "participantIds": {
+            "example": [
+              "userId1",
+              "userId2"
+            ],
+            "description": "Initial participant IDs",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "UpdateChatDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "New Name",
+            "description": "New chat name"
+          }
+        }
+      },
+      "AddUserToChatDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "example": "clxxxxxxxxxxxxx",
+            "description": "ID of the user to add"
+          }
+        },
+        "required": [
+          "userId"
+        ]
+      },
+      "GetOrCreateChatDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "example": "clxxxxxxxxxxxxx",
+            "description": "Target user ID for private chat"
+          }
+        },
+        "required": [
+          "userId"
+        ]
+      }
+    }
+  }
+}
